@@ -1,0 +1,2 @@
+/* Keep stamped lettering perfectly stationary while the seal's shadow breathes subtly. */
+@keyframes sealIdleRefined{50%{transform:translate(-50%,-50%) rotate(-1.5deg);box-shadow:inset 3px 3px 4px rgba(255,211,157,.35),inset -4px -5px 6px rgba(92,44,22,.22),0 3px 0 #733a22,2px 7px 5px rgba(54,27,14,.29),6px 12px 14px rgba(42,21,12,.2)}}
