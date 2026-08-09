@@ -15,9 +15,9 @@
 .couple-dance-video {
   position: absolute;
   z-index: 1;
-  top: 4vh;
+  top: 0;
   width: 100vw;
-  height: 80svh; /* Reduced slightly to bring the bottom up */
+  height: 100svh;
   max-height: none;
   object-fit: cover;
   object-position: 50% 50%;
@@ -62,7 +62,7 @@
   .couple-dance-video {
     top: 0;
     width: min(92vw, 900px);
-    height: 90svh;
+    height: 100svh;
     object-position: 50% 50%;
   }
   .couple-sticky .story-kicker {
@@ -75,9 +75,9 @@
 
 @media (max-width: 380px) {
   .couple-dance-video {
-    top: 3vh;
+    top: 0;
     width: 100vw;
-    height: 78svh;
+    height: 100svh;
     object-position: 50% 50%;
   }
   .couple-sticky .story-kicker {
