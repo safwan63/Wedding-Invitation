@@ -1,0 +1,2 @@
+/* Remove the blue tint while retaining a restrained neutral readability veil. */
+.hero .hero-overlay{background:radial-gradient(ellipse 72% 80% at 50% 46%,rgba(24,17,14,.5) 0%,rgba(24,17,14,.35) 45%,rgba(24,17,14,.16) 74%,rgba(24,17,14,.03) 100%),linear-gradient(180deg,rgba(15,10,8,.1),rgba(15,10,8,.02) 45%,rgba(15,10,8,.14))}
