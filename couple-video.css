@@ -1,0 +1,97 @@
+/* Layout-only refinement for the existing scroll-scrubbed choreography. */
+.couple-story {
+  height: 300vh;
+  background: #e8e9ea;
+}
+
+.couple-art, .original-couple-layers {
+  display: none !important;
+}
+
+.couple-sticky {
+  background: #e8e9ea;
+}
+
+.couple-dance-video {
+  position: absolute;
+  z-index: 1;
+  top: 3vh;
+  width: 100vw;
+  height: 84svh;
+  max-height: none;
+  object-fit: cover;
+  object-position: 50% 50%;
+  display: block;
+  background: transparent;
+  transform: none;
+  mix-blend-mode: multiply; /* Perfect blending with the background */
+}
+
+.couple-sticky .story-kicker, .couple-sticky .story-quote {
+  z-index: 3;
+}
+
+.couple-sticky .story-kicker {
+  top: 5vh;
+  color: #1a4282;
+  font: 500 clamp(16px, 4.5vw, 22px)/1 "Cormorant Garamond", serif;
+  letter-spacing: .25em;
+  text-transform: uppercase;
+}
+
+.couple-sticky .story-kicker:after {
+  display: none; /* Removes the diamond line */
+}
+
+.couple-sticky .story-quote {
+  top: auto;
+  bottom: 6vh;
+  width: min(94vw, 680px);
+  color: #1a4282;
+  font: italic 500 clamp(36px, 8.5vw, 56px)/1.05 "Cormorant Garamond", serif;
+  letter-spacing: 0;
+  text-shadow: none;
+}
+
+.couple-sticky .story-progress {
+  display: none;
+}
+
+@media (min-width: 700px) {
+  .couple-dance-video {
+    top: 0;
+    width: min(92vw, 900px);
+    height: 90svh;
+    object-position: 50% 50%;
+  }
+  .couple-sticky .story-kicker {
+    top: 5vh;
+  }
+  .couple-sticky .story-quote {
+    bottom: 5vh;
+  }
+}
+
+@media (max-width: 380px) {
+  .couple-dance-video {
+    top: 2vh;
+    width: 100vw;
+    height: 84svh;
+    object-position: 50% 50%;
+  }
+  .couple-sticky .story-kicker {
+    top: 4vh;
+    font-size: 14px;
+    letter-spacing: .2em;
+  }
+  .couple-sticky .story-quote {
+    bottom: 5vh;
+    font-size: 34px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .couple-dance-video {
+    display: none;
+  }
+}
