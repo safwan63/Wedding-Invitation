@@ -10,6 +10,12 @@
 
 .couple-sticky {
   background: #e8e9ea;
+  isolation: isolate;
+  contain: layout style paint;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
 .couple-dance-video {
@@ -23,8 +29,12 @@
   object-position: 50% 50%;
   display: block;
   background: transparent;
-  transform: none;
+  transform: translate3d(0, 0, 0);
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
   mix-blend-mode: multiply;
+  pointer-events: none;
 }
 
 .couple-sticky .story-kicker, .couple-sticky .story-quote {
@@ -74,11 +84,16 @@
 }
 
 @media (max-width: 380px) {
+  .couple-story {
+    height: 320vh;
+  }
+
   .couple-dance-video {
     top: 0;
     width: 100vw;
     height: 100svh;
     object-position: 50% 50%;
+    mix-blend-mode: normal;
   }
   .couple-sticky .story-kicker {
     top: 4vh;
@@ -94,5 +109,11 @@
 @media (prefers-reduced-motion: reduce) {
   .couple-dance-video {
     display: none;
+  }
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .couple-dance-video {
+    mix-blend-mode: normal;
   }
 }

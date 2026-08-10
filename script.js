@@ -43,40 +43,96 @@ function reveal(){scratched=true;canvas.style.transition='opacity .7s';canvas.st
 ['pointerdown'].forEach(n=>canvas.addEventListener(n,e=>{drawing=true;last=point(e);scratch(e)}));['pointermove'].forEach(n=>canvas.addEventListener(n,scratch));['pointerup','pointerleave','pointercancel'].forEach(n=>canvas.addEventListener(n,()=>drawing=false));paint();addEventListener('resize',()=>{if(!scratched)paint()});
 function petals(){for(let i=0;i<28;i++){const p=document.createElement('i');p.className='petal';p.style.left=(35+Math.random()*30)+'vw';p.style.top=(-10-Math.random()*15)+'px';p.style.setProperty('--x',(-180+Math.random()*360)+'px');p.style.animationDelay=(Math.random()*.8)+'s';document.body.append(p);setTimeout(()=>p.remove(),3300)}}
 
-// Scroll-driven line-art couple: movement reverses naturally when the guest scrolls upward.
+// Scroll-driven dance video: continuous rAF + smoothed seeking for mobile.
 const coupleStory=$('coupleStory');
-if(coupleStory&&!matchMedia('(prefers-reduced-motion: reduce)').matches){const groomArt=coupleStory.querySelector('.groom'),brideArt=coupleStory.querySelector('.bride'),dressArt=coupleStory.querySelector('.dress-fold');let storyQueued=false;const ease=t=>t*t*(3-2*t);const updateCoupleStory=()=>{storyQueued=false;const rect=coupleStory.getBoundingClientRect(),travel=Math.max(1,coupleStory.offsetHeight-innerHeight),progress=Math.max(0,Math.min(1,-rect.top/travel)),meet=ease(Math.min(1,progress/.55)),dance=ease(Math.max(0,Math.min(1,(progress-.55)/.35))),settle=ease(Math.max(0,Math.min(1,(progress-.82)/.18)));groomArt.style.setProperty('--groom-x',`${-108*(1-meet)+Math.sin(dance*Math.PI)*3}px`);brideArt.style.setProperty('--bride-x',`${108*(1-meet)-Math.sin(dance*Math.PI)*4}px`);groomArt.style.setProperty('--groom-rot',`${dance*2.2-settle*.9}deg`);brideArt.style.setProperty('--bride-rot',`${-dance*2.6+settle*.8}deg`);dressArt.style.setProperty('--dress',1+dance*.035);coupleStory.style.setProperty('--quote',Math.max(0,Math.min(1,(progress-.83)/.13)));coupleStory.style.setProperty('--progress',progress)};const queueCoupleStory=()=>{if(!storyQueued){storyQueued=true;requestAnimationFrame(updateCoupleStory)}};addEventListener('scroll',queueCoupleStory,{passive:true});addEventListener('resize',queueCoupleStory);queueCoupleStory()}
+if(coupleStory&&!matchMedia('(prefers-reduced-motion: reduce)').matches){
+const isTouch=matchMedia('(hover: none) and (pointer: coarse)').matches;
+const danceHost=coupleStory.querySelector('.couple-sticky');
+const danceVideo=document.createElement('video');
+danceVideo.className='couple-dance-video';
+danceVideo.id='coupleDanceVideo';
+danceVideo.muted=true;
+danceVideo.playsInline=true;
+danceVideo.preload='auto';
+danceVideo.setAttribute('playsinline','');
+danceVideo.setAttribute('webkit-playsinline','');
+danceVideo.setAttribute('aria-label','Scroll-driven wedding dance animation');
+const danceSource=document.createElement('source');
+danceSource.src='assets/couple-dance.mp4';
+danceSource.type='video/mp4';
+danceVideo.append(danceSource);
+danceHost.prepend(danceVideo);
 
-// The original illustration stays intact; scrolling gives the complete artwork a gentle editorial parallax.
-if(coupleStory&&!matchMedia('(prefers-reduced-motion: reduce)').matches){let artworkQueued=false;const easeArtwork=t=>t*t*(3-2*t);const updateOriginalArtwork=()=>{artworkQueued=false;const rect=coupleStory.getBoundingClientRect(),travel=Math.max(1,coupleStory.offsetHeight-innerHeight),progress=Math.max(0,Math.min(1,-rect.top/travel)),arrival=easeArtwork(Math.min(1,progress/.68)),turn=easeArtwork(Math.max(0,Math.min(1,(progress-.58)/.32)));coupleStory.style.setProperty('--art-scale',.92+arrival*.08);coupleStory.style.setProperty('--art-x',`${-7*(1-arrival)+Math.sin(turn*Math.PI)*2}px`);coupleStory.style.setProperty('--art-y',`${8*(1-arrival)-turn*5}px`);coupleStory.style.setProperty('--art-rotate',`${turn*.45}deg`)};const queueOriginalArtwork=()=>{if(!artworkQueued){artworkQueued=true;requestAnimationFrame(updateOriginalArtwork)}};addEventListener('scroll',queueOriginalArtwork,{passive:true});addEventListener('resize',queueOriginalArtwork);queueOriginalArtwork()}
+let danceReady=false,duration=0,visible=false,rafId=0,smoothTime=0,scrollTravel=1;
+const lerp=isTouch?0.28:0.42;
+const seekGap=isTouch?0.035:0.018;
 
-// Supplied finished choreography: scroll progress maps directly to the video's real duration.
-if(coupleStory){
-const danceHost=coupleStory.querySelector('.couple-sticky'),danceVideo=document.createElement('video');
-danceVideo.className='couple-dance-video';danceVideo.id='coupleDanceVideo';danceVideo.muted=true;danceVideo.playsInline=true;danceVideo.preload='auto';danceVideo.setAttribute('aria-label','Scroll-driven wedding dance animation');
-const danceSource=document.createElement('source');danceSource.src='assets/couple-dance.mp4';danceSource.type='video/mp4';danceVideo.append(danceSource);danceHost.prepend(danceVideo);
-const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
-let danceReady=false,targetTime=0,currentTime=0,isScrubbing=false;
-const smoothScrub=()=>{
-if(!danceReady||reduced){isScrubbing=false;return;}
-currentTime+=(targetTime-currentTime)*0.12;
-if(Math.abs(currentTime-targetTime)<0.01){currentTime=targetTime;isScrubbing=false;}
-else{requestAnimationFrame(smoothScrub);}
-if(Math.abs(danceVideo.currentTime-currentTime)>0.04){try{danceVideo.currentTime=currentTime}catch{}}
+const viewportHeight=()=>(window.visualViewport&&window.visualViewport.height)||innerHeight;
+
+const refreshLayout=()=>{
+scrollTravel=Math.max(1,coupleStory.offsetHeight-viewportHeight());
 };
-const queueDance=()=>{
-if(!danceReady||reduced)return;
-const rect=coupleStory.getBoundingClientRect(),travel=Math.max(1,coupleStory.offsetHeight-innerHeight),progress=Math.max(0,Math.min(1,-rect.top/travel));
-targetTime=progress*danceVideo.duration;
-if(Number.isFinite(targetTime)&&!isScrubbing){isScrubbing=true;requestAnimationFrame(smoothScrub);}
+
+const scrollProgress=()=>{
+const rect=coupleStory.getBoundingClientRect();
+return Math.max(0,Math.min(1,-rect.top/scrollTravel));
 };
+
+const applySeek=time=>{
+if(!Number.isFinite(time))return;
+try{
+if(typeof danceVideo.fastSeek==='function')danceVideo.fastSeek(time);
+else danceVideo.currentTime=time;
+}catch{}
+};
+
+const tick=()=>{
+rafId=0;
+if(!visible||!danceReady)return;
+const target=scrollProgress()*duration;
+smoothTime+= (target-smoothTime)*lerp;
+if(Math.abs(danceVideo.currentTime-smoothTime)>seekGap)applySeek(smoothTime);
+rafId=requestAnimationFrame(tick);
+};
+
+const startLoop=()=>{
+if(!rafId&&visible&&danceReady)rafId=requestAnimationFrame(tick);
+};
+
+const stopLoop=()=>{
+if(rafId){cancelAnimationFrame(rafId);rafId=0;}
+};
+
+new IntersectionObserver(([entry])=>{
+visible=entry.isIntersecting;
+if(visible){refreshLayout();startLoop();}
+else stopLoop();
+},{rootMargin:'15% 0px',threshold:0}).observe(coupleStory);
+
+const onLayout=()=>{
+refreshLayout();
+smoothTime=scrollProgress()*duration;
+applySeek(smoothTime);
+startLoop();
+};
+
 danceVideo.addEventListener('loadedmetadata',()=>{
-danceReady=Number.isFinite(danceVideo.duration)&&danceVideo.duration>0;
-danceVideo.pause();try{danceVideo.currentTime=0}catch{}queueDance()
+duration=danceVideo.duration;
+danceReady=Number.isFinite(duration)&&duration>0;
+danceVideo.pause();
+refreshLayout();
+smoothTime=0;
+applySeek(0);
+startLoop();
 },{once:true});
-danceVideo.addEventListener('canplay',()=>danceVideo.pause());
-addEventListener('scroll',queueDance,{passive:true});
-addEventListener('resize',queueDance);
+
+danceVideo.addEventListener('canplaythrough',()=>danceVideo.pause(),{once:true});
+danceVideo.addEventListener('loadeddata',()=>danceVideo.pause());
+
+addEventListener('scroll',startLoop,{passive:true});
+addEventListener('resize',onLayout,{passive:true});
+if(window.visualViewport)visualViewport.addEventListener('resize',onLayout,{passive:true});
+
 danceVideo.load();
 }
 
