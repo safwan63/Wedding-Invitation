@@ -1,7 +1,8 @@
 /* EDITABLE WEDDING DETAILS */
-const suppliedSong=new Audio('assets/background-music.mp3');suppliedSong.loop=true;suppliedSong.preload='metadata';suppliedSong.volume=.42;
+let musicOn=false;
+const suppliedSong=new Audio('assets/background-music.mp4');suppliedSong.loop=true;suppliedSong.preload='auto';suppliedSong.volume=.42;suppliedSong.load();
 function updateSongControl(){const state=musicOn?'sound on':'sound off';$('soundToggle').innerHTML=`<span>♪</span><i>${state}</i>`;$('soundToggle').setAttribute('aria-label',musicOn?'Turn background music off':'Turn background music on')}
-startMusic=function(){if(musicOn)return;const playback=suppliedSong.play();musicOn=true;updateSongControl();if(playback)playback.catch(()=>{musicOn=false;updateSongControl()})};
+startMusic=function(){if(musicOn)return;musicOn=true;updateSongControl();const play=()=>{const playback=suppliedSong.play();if(playback)playback.catch(()=>{musicOn=false;updateSongControl()})};if(suppliedSong.readyState>=2)play();else suppliedSong.addEventListener('canplay',play,{once:true})};
 document.body.classList.add('intro-active');
 const wedding = {
   bride: 'Dr Noora Fathima', groom: 'Dr Ifsul Hashim',
@@ -79,5 +80,3 @@ addEventListener('resize',queueDance);
 danceVideo.load();
 }
 
-// Soft ambient wedding chime, enabled only after the invitation is opened.
-let audio, musicOn=false, musicTimer; function tone(freq,when,duration,volume){const o=audio.createOscillator(),g=audio.createGain();o.type='sine';o.frequency.value=freq;g.gain.setValueAtTime(0,when);g.gain.linearRampToValueAtTime(volume,when+.08);g.gain.exponentialRampToValueAtTime(.001,when+duration);o.connect(g).connect(audio.destination);o.start(when);o.stop(when+duration+.1)}function playLoop(){if(!musicOn)return;const t=audio.currentTime;[261.6,329.6,392,329.6].forEach((f,i)=>tone(f,t+i*1.1,1.4,.025));musicTimer=setTimeout(playLoop,4600)}function startMusic(){if(musicOn)return;audio=new (window.AudioContext||window.webkitAudioContext)();musicOn=true;$('soundToggle').innerHTML='<span>♪</span><i>sound on</i>';playLoop()}$('soundToggle').addEventListener('click',()=>{if(!musicOn){startMusic()}else{musicOn=false;clearTimeout(musicTimer);$('soundToggle').innerHTML='<span>♪</span><i>sound off</i>'}});
