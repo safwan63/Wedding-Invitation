@@ -1,6 +1,7 @@
-/* Layout-only refinement for the existing scroll-scrubbed choreography. */
+/* Auto-playing couple dance section. */
 .couple-story {
-  height: 350vh;
+  height: 100svh;
+  min-height: 560px;
   background: #e8e9ea;
 }
 
@@ -30,7 +31,6 @@
   display: block;
   background: transparent;
   transform: translate3d(0, 0, 0);
-  will-change: transform;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
   mix-blend-mode: multiply;
@@ -84,10 +84,6 @@
 }
 
 @media (max-width: 380px) {
-  .couple-story {
-    height: 320vh;
-  }
-
   .couple-dance-video {
     top: 0;
     width: 100vw;

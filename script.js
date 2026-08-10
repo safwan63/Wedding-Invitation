@@ -43,10 +43,9 @@ function reveal(){scratched=true;canvas.style.transition='opacity .7s';canvas.st
 ['pointerdown'].forEach(n=>canvas.addEventListener(n,e=>{drawing=true;last=point(e);scratch(e)}));['pointermove'].forEach(n=>canvas.addEventListener(n,scratch));['pointerup','pointerleave','pointercancel'].forEach(n=>canvas.addEventListener(n,()=>drawing=false));paint();addEventListener('resize',()=>{if(!scratched)paint()});
 function petals(){for(let i=0;i<28;i++){const p=document.createElement('i');p.className='petal';p.style.left=(35+Math.random()*30)+'vw';p.style.top=(-10-Math.random()*15)+'px';p.style.setProperty('--x',(-180+Math.random()*360)+'px');p.style.animationDelay=(Math.random()*.8)+'s';document.body.append(p);setTimeout(()=>p.remove(),3300)}}
 
-// Scroll-driven dance video: continuous rAF + smoothed seeking for mobile.
+// Auto-play dance video when the couple section comes into view.
 const coupleStory=$('coupleStory');
 if(coupleStory&&!matchMedia('(prefers-reduced-motion: reduce)').matches){
-const isTouch=matchMedia('(hover: none) and (pointer: coarse)').matches;
 const danceHost=coupleStory.querySelector('.couple-sticky');
 const danceVideo=document.createElement('video');
 danceVideo.className='couple-dance-video';
@@ -56,82 +55,40 @@ danceVideo.playsInline=true;
 danceVideo.preload='auto';
 danceVideo.setAttribute('playsinline','');
 danceVideo.setAttribute('webkit-playsinline','');
-danceVideo.setAttribute('aria-label','Scroll-driven wedding dance animation');
+danceVideo.setAttribute('aria-label','Wedding dance animation');
 const danceSource=document.createElement('source');
 danceSource.src='assets/couple-dance.mp4';
 danceSource.type='video/mp4';
 danceVideo.append(danceSource);
 danceHost.prepend(danceVideo);
 
-let danceReady=false,duration=0,visible=false,rafId=0,smoothTime=0,scrollTravel=1;
-const lerp=isTouch?0.28:0.42;
-const seekGap=isTouch?0.035:0.018;
+let danceReady=false,playing=false;
 
-const viewportHeight=()=>(window.visualViewport&&window.visualViewport.height)||innerHeight;
-
-const refreshLayout=()=>{
-scrollTravel=Math.max(1,coupleStory.offsetHeight-viewportHeight());
+const playDance=()=>{
+if(!danceReady||playing)return;
+playing=true;
+danceVideo.currentTime=0;
+const playback=danceVideo.play();
+if(playback)playback.catch(()=>{playing=false});
 };
 
-const scrollProgress=()=>{
-const rect=coupleStory.getBoundingClientRect();
-return Math.max(0,Math.min(1,-rect.top/scrollTravel));
+const resetDance=()=>{
+playing=false;
+danceVideo.pause();
+try{danceVideo.currentTime=0}catch{}
 };
 
-const applySeek=time=>{
-if(!Number.isFinite(time))return;
-try{
-if(typeof danceVideo.fastSeek==='function')danceVideo.fastSeek(time);
-else danceVideo.currentTime=time;
-}catch{}
-};
-
-const tick=()=>{
-rafId=0;
-if(!visible||!danceReady)return;
-const target=scrollProgress()*duration;
-smoothTime+= (target-smoothTime)*lerp;
-if(Math.abs(danceVideo.currentTime-smoothTime)>seekGap)applySeek(smoothTime);
-rafId=requestAnimationFrame(tick);
-};
-
-const startLoop=()=>{
-if(!rafId&&visible&&danceReady)rafId=requestAnimationFrame(tick);
-};
-
-const stopLoop=()=>{
-if(rafId){cancelAnimationFrame(rafId);rafId=0;}
-};
+danceVideo.addEventListener('ended',()=>{playing=false});
 
 new IntersectionObserver(([entry])=>{
-visible=entry.isIntersecting;
-if(visible){refreshLayout();startLoop();}
-else stopLoop();
-},{rootMargin:'15% 0px',threshold:0}).observe(coupleStory);
-
-const onLayout=()=>{
-refreshLayout();
-smoothTime=scrollProgress()*duration;
-applySeek(smoothTime);
-startLoop();
-};
+if(entry.isIntersecting&&entry.intersectionRatio>=0.55)playDance();
+else if(!entry.isIntersecting)resetDance();
+},{threshold:[0,.55,.75]}).observe(coupleStory);
 
 danceVideo.addEventListener('loadedmetadata',()=>{
-duration=danceVideo.duration;
-danceReady=Number.isFinite(duration)&&duration>0;
+danceReady=Number.isFinite(danceVideo.duration)&&danceVideo.duration>0;
 danceVideo.pause();
-refreshLayout();
-smoothTime=0;
-applySeek(0);
-startLoop();
 },{once:true});
-
-danceVideo.addEventListener('canplaythrough',()=>danceVideo.pause(),{once:true});
-danceVideo.addEventListener('loadeddata',()=>danceVideo.pause());
-
-addEventListener('scroll',startLoop,{passive:true});
-addEventListener('resize',onLayout,{passive:true});
-if(window.visualViewport)visualViewport.addEventListener('resize',onLayout,{passive:true});
 
 danceVideo.load();
 }
